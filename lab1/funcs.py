@@ -116,26 +116,23 @@ class Solver:
         print(t)
         print("Метод Ньютона не сошелся за указанное число итераций.")
 
-    def plot_function(self, a: float, b: float) -> None:
-        # Создаем массив x в пределах от a до b
-        x = np.linspace(a, b, 500)
+    def plot_function(self) -> None:
+        # Создаем массив x с диапазоном, например, от -10 до 10
+        x = np.linspace(-10, 10, 500)
         y = self.func(x)
 
-        # Ищем корень для обозначения его на графике
-        root = self.bisection_method(a, b)
-
         # Построение графика функции
-        plt.plot(x, y, label=f'$f(x) = {self.a}x^3 + {self.b}x^2 + {self.c}x + {self.d}$')
+        plt.plot(x, y, label=f'$f(x) = {self.func.a}x^3 + {self.func.b}x^2 + {self.func.c}x + {self.func.d}$')
         plt.axhline(0, color='black', linewidth=0.5)  # Ось X
         plt.axvline(0, color='black', linewidth=0.5)  # Ось Y
-
-        # Обозначение найденного корня на графике
-        plt.plot(root, self.func(root), 'ro', label=f'Root ≈ {root:.4f}')
 
         # Настройка графика
         plt.xlabel('x')
         plt.ylabel('f(x)')
-        plt.title('Graph of the function and the root found by Bisection Method')
+        plt.title('Graph of the Function')
         plt.legend()
         plt.grid(True)
+        plt.ylim(-10, 10)  # Устанавливаем пределы по оси Y для лучшего отображения
+        plt.xlim(-10, 10)  # Устанавливаем пределы по оси X
         plt.show()
+

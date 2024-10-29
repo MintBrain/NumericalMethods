@@ -37,11 +37,22 @@ def get_coefficients():
 def parse_equation(equation: str) -> Func:
     """Парсит строку уравнения и возвращает коэффициенты (a, b, c, d) для кубического уравнения."""
     # Приведение уравнения к стандартному виду (ax^3 + bx^2 + cx + d = 0)
-    equation = equation.replace(" ", "").replace("=", "-(").replace("/(", ")*1/(")
+    equation = equation.replace(" ", "")
+    if '=' in equation:
+        left, right = equation.split('=')
+        equation = f"({left}) - ({right})"  # Приводим уравнение к виду (left) - (right) = 0
 
     # Используем sympy для обработки уравнений
     x = sp.symbols('x')
-    expr = sp.sympify(equation)  # Преобразуем строку в выражение sympy
+
+    try:
+        expr = sp.sympify(equation)  # Преобразуем строку в выражение sympy
+    except (sp.SympifyError, SyntaxError) as e:
+        raise ValueError(f"Ошибка при парсинге уравнения: {e}")
+
+    if expr.has(sp.Rational):
+        common_denominator = sp.lcm(*[sp.denom(fraction) for fraction in expr.as_numer_denom()])
+        expr *= common_denominator
 
     # Приводим уравнение к стандартному виду
     standard_form = sp.expand(expr)
@@ -53,9 +64,7 @@ def parse_equation(equation: str) -> Func:
     while len(coeffs) < 4:
         coeffs.insert(0, 0)
 
-    a, b, c, d = [float(coef) for coef in coeffs]
-
-    return Func(a, b, c, d)
+    return Func(*[float(coef) for coef in coeffs])
 
 
 def get_user_equation():

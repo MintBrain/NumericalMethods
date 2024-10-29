@@ -1,4 +1,3 @@
-
 from lab1.input import get_precision, choose_equation_type, get_coefficients, get_user_equation, get_method
 from lab1.funcs import Func, Solver
 
@@ -14,7 +13,6 @@ def get_func(equation_type) -> Func:
         except Exception as e:
             print(f'Ошибка {e}')
             print('Попробуйте ввести данные заново.')
-
 
 
 def main():
@@ -37,10 +35,11 @@ def main():
 
 
 def test():
-    solver = Solver(1,0,2,2)
+    solver = Solver(Func(1,0,2,2))
+    solver.plot_function()
     solver.bisection_method(a=-2, b=2)
     solver.newton_method(0)
 
 
 if __name__ == '__main__':
-    main()
+    test()
