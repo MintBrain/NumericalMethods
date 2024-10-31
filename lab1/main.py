@@ -36,7 +36,7 @@ def main():
 
 def test():
     solver = Solver(Func(1,0,2,2))
-    solver.plot_function()
+    solver.plot()
     solver.bisection_method(a=-2, b=2)
     solver.newton_method(0)
 

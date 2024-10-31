@@ -92,9 +92,10 @@ class Solver:
             f_x = self.func(x)
             f_prime_x = self.func.derivative(x)
 
-            if f_prime_x == 0:
+            if f_prime_x == 0.0:
                 print(t)
                 print("Производная равна нулю; метод Ньютона не применим.")
+                return 0
 
             precision = abs(f_x / f_prime_x)
             t.add_row([counter, x, f_x, f_prime_x, precision])
@@ -136,3 +137,22 @@ class Solver:
         plt.xlim(-10, 10)  # Устанавливаем пределы по оси X
         plt.show()
 
+    def plot(self) -> None:
+        x = np.linspace(-5, 5, 400)
+
+        # Определим функции
+        y1 = self.func.a * pow(x,3)
+        y2 = -self.func.b * pow(x,2) - self.func.c * x - self.func.d
+
+        # Построим график
+        plt.figure(figsize=(10, 6))
+        plt.plot(x, y1, label=rf"$y = {self.func.a}x^3$", color='blue')
+        plt.plot(x, y2, label=rf"$y = {-self.func.b}x^2 {-self.func.c}x {-self.func.d}$", color='red')
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.title("Графики функций $y = x^3$ и $y = -2x - 2$")
+        plt.axhline(0, color='black', linewidth=0.5)
+        plt.axvline(0, color='black', linewidth=0.5)
+        plt.legend()
+        plt.grid(True)
+        plt.show(block=False)

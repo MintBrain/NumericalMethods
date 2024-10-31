@@ -1,8 +1,6 @@
 import re
 from typing import Literal
-
 import sympy as sp
-
 from lab1.funcs import Func
 
 def choose_equation_type() -> int:
@@ -16,7 +14,6 @@ def choose_equation_type() -> int:
         return choose_equation_type()
 
     return int(equation_type)
-
 
 def get_coefficients():
     while True:
@@ -32,7 +29,6 @@ def get_coefficients():
             return a, b, c, d
         except ValueError:
             print("Ошибка ввода, пожалуйста, введите числовые значения.")
-
 
 def parse_equation(equation: str) -> Func:
     """Парсит строку уравнения и возвращает коэффициенты (a, b, c, d) для кубического уравнения."""
@@ -66,7 +62,6 @@ def parse_equation(equation: str) -> Func:
 
     return Func(*[float(coef) for coef in coeffs])
 
-
 def get_user_equation():
     """Запрашивает у пользователя уравнение, парсит его и возвращает экземпляр класса Func."""
     while True:
@@ -76,7 +71,6 @@ def get_user_equation():
         except Exception as e:
             print(f"Ошибка: {e}")
             print("Попробуйте ввести уравнение снова.")
-
 
 def get_precision() -> float:
     while True:
@@ -88,7 +82,6 @@ def get_precision() -> float:
             return precision
         except ValueError:
             print("Ошибка ввода, пожалуйста, введите числа.")
-
 
 def get_bisection_params() -> tuple[float, float]:
     """Запрашивает у пользователя границы интервала для метода бисекции."""
