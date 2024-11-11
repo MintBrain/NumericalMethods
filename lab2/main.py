@@ -1,0 +1,84 @@
+from tabulate import tabulate
+
+
+def gauss_elimination(a: list[list[float]], b: list[float]):
+    n = len(b)
+    # Прямой ход метода Гаусса
+    for i in range(n):
+        # Поиск максимального элемента для избежания вырождения
+        max_row = i
+        for k in range(i + 1, n):
+            if abs(a[k][i]) > abs(a[max_row][i]):
+                max_row = k
+        # Поменять строки местами
+        a[i], a[max_row] = a[max_row], a[i]
+        b[i], b[max_row] = b[max_row], b[i]
+
+        # Обнуление элементов ниже текущего
+        for k in range(i + 1, n):
+            factor = a[k][i] / a[i][i]
+            for j in range(i, n):
+                a[k][j] -= factor * a[i][j]
+            b[k] -= factor * b[i]
+
+        # Отображение промежуточных шагов
+        print(f"Шаг {i + 1}:")
+        print(tabulate([row + [b[i]] for i, row in enumerate(a)], headers=[f"x{j + 1}" for j in range(n)] + ["b"]))
+        print()
+
+    # Обратный ход
+    x: list[float] = [0] * n
+    for i in range(n - 1, -1, -1):
+        x[i] = b[i]
+        for j in range(i + 1, n):
+            x[i] -= a[i][j] * x[j]
+        x[i] /= a[i][i]
+
+    return x
+
+
+def test():
+    n = 4
+    a = [[2, 1, 1, 1],
+         [2, 2, 2, 3],
+         [2, 2, 3, 4],
+         [2, 2, 3, 5]]
+    b = [2, 1, 0, -1]
+
+    print("\nНачальная система уравнений:")
+    print(tabulate([row + [b[i]] for i, row in enumerate(a)], headers=[f"x{j + 1}" for j in range(n)] + ["b"]))
+    print()
+
+    solution = gauss_elimination(a, b)
+
+    print("Решение:")
+    for i in range(n):
+        print(f"x{i + 1} = {solution[i]}")
+
+
+# Ввод коэффициентов системы
+def main():
+    n = int(input("Введите количество переменных: "))
+    a = []
+    b = []
+    print("Введите коэффициенты системы уравнений:")
+    for i in range(n):
+        row = list(map(float, input(f"Коэффициенты уравнения {i + 1}: ").split()))
+        a.append(row[:-1])
+        b.append(row[-1])
+
+    print("\nНачальная система уравнений:")
+    print(tabulate([row + [b[i]] for i, row in enumerate(a)], headers=[f"x{j + 1}" for j in range(n)] + ["b"]))
+    print()
+
+    # Решение методом Гаусса
+    solution = gauss_elimination(a, b)
+
+    # Вывод решения
+    print("Решение:")
+    for i in range(n):
+        print(f"x{i + 1} = {solution[i]}")
+
+
+if __name__ == "__main__":
+    test()
