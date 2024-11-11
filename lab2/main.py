@@ -37,6 +37,45 @@ def gauss_elimination(a: list[list[float]], b: list[float]):
     return x
 
 
+def _input() -> tuple[list[list[float]], list[float]]:
+    while True:
+        try:
+            # Ввод количества переменных
+            n = int(input("Введите количество переменных: "))
+            if n <= 0:
+                print("Количество переменных должно быть положительным.")
+                continue
+            break
+        except ValueError:
+            print("Ошибка: введите целое положительное число для количества переменных.")
+
+    a = []
+    b = []
+    print(f"Введите {n + 1} коэффициентов системы уравнений.")
+
+    for i in range(n):
+        while True:
+            try:
+                # Ввод строки коэффициентов для одного уравнения
+                row = list(map(float, input(f"Коэффициенты уравнения {i + 1} (через пробел): ").split()))
+
+                # Проверка на корректное количество значений (n коэффициентов и один свободный член)
+                if len(row) != n + 1:
+                    print(
+                        f"Ошибка: уравнение {i + 1} должно содержать {n + 1} значений ({n} коэффициентов и свободный член).")
+                    continue
+
+                # Разделение строки на коэффициенты и свободный член
+                a.append(row[:-1])
+                b.append(row[-1])
+                break
+
+            except ValueError:
+                print("Ошибка: введите числовые значения для коэффициентов и свободного члена.")
+
+    return a, b
+
+
 def test():
     n = 4
     a = [[2, 1, 1, 1],
@@ -56,29 +95,19 @@ def test():
         print(f"x{i + 1} = {solution[i]}")
 
 
-# Ввод коэффициентов системы
 def main():
-    n = int(input("Введите количество переменных: "))
-    a = []
-    b = []
-    print("Введите коэффициенты системы уравнений:")
-    for i in range(n):
-        row = list(map(float, input(f"Коэффициенты уравнения {i + 1}: ").split()))
-        a.append(row[:-1])
-        b.append(row[-1])
+    a, b = _input()
 
     print("\nНачальная система уравнений:")
-    print(tabulate([row + [b[i]] for i, row in enumerate(a)], headers=[f"x{j + 1}" for j in range(n)] + ["b"]))
+    print(tabulate([row + [b[i]] for i, row in enumerate(a)], headers=[f"x{j + 1}" for j in range(len(a))] + ["b"]))
     print()
 
-    # Решение методом Гаусса
     solution = gauss_elimination(a, b)
 
-    # Вывод решения
     print("Решение:")
-    for i in range(n):
+    for i in range(len(a)):
         print(f"x{i + 1} = {solution[i]}")
 
 
 if __name__ == "__main__":
-    test()
+    main()
