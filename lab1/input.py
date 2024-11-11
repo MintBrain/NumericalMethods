@@ -1,19 +1,4 @@
-import re
-from typing import Literal
-import sympy as sp
-from lab1.funcs import Func
-
-def choose_equation_type() -> int:
-    print("Выберите тип уравнения:")
-    print("1. Кубическое уравнение ax^3 + bx^2 + cx + d = 0")
-    print("2. Пользовательское уравнение")
-
-    equation_type = input("Введите номер типа уравнения (1 или 2): ")
-    if equation_type not in ["1", "2"]:
-        print("Некорректный ввод. Попробуйте снова.")
-        return choose_equation_type()
-
-    return int(equation_type)
+from funcs import Func
 
 def get_coefficients():
     while True:
@@ -30,48 +15,6 @@ def get_coefficients():
         except ValueError:
             print("Ошибка ввода, пожалуйста, введите числовые значения.")
 
-def parse_equation(equation: str) -> Func:
-    """Парсит строку уравнения и возвращает коэффициенты (a, b, c, d) для кубического уравнения."""
-    # Приведение уравнения к стандартному виду (ax^3 + bx^2 + cx + d = 0)
-    equation = equation.replace(" ", "")
-    if '=' in equation:
-        left, right = equation.split('=')
-        equation = f"({left}) - ({right})"  # Приводим уравнение к виду (left) - (right) = 0
-
-    # Используем sympy для обработки уравнений
-    x = sp.symbols('x')
-
-    try:
-        expr = sp.sympify(equation)  # Преобразуем строку в выражение sympy
-    except (sp.SympifyError, SyntaxError) as e:
-        raise ValueError(f"Ошибка при парсинге уравнения: {e}")
-
-    if expr.has(sp.Rational):
-        common_denominator = sp.lcm(*[sp.denom(fraction) for fraction in expr.as_numer_denom()])
-        expr *= common_denominator
-
-    # Приводим уравнение к стандартному виду
-    standard_form = sp.expand(expr)
-
-    # Получаем коэффициенты для кубического уравнения
-    coeffs = sp.Poly(standard_form, x).all_coeffs()
-
-    # Дополняем до 4 коэффициентов
-    while len(coeffs) < 4:
-        coeffs.insert(0, 0)
-
-    return Func(*[float(coef) for coef in coeffs])
-
-def get_user_equation():
-    """Запрашивает у пользователя уравнение, парсит его и возвращает экземпляр класса Func."""
-    while True:
-        equation = input("Введите уравнение (например, (x + 1)^2 = 1/x): ")
-        try:
-            return parse_equation(equation)
-        except Exception as e:
-            print(f"Ошибка: {e}")
-            print("Попробуйте ввести уравнение снова.")
-
 def get_precision() -> float:
     while True:
         try:
@@ -83,7 +26,7 @@ def get_precision() -> float:
         except ValueError:
             print("Ошибка ввода, пожалуйста, введите числа.")
 
-def get_bisection_params() -> tuple[float, float]:
+def get_bisection_params(func: Func) -> tuple[float, float]:
     """Запрашивает у пользователя границы интервала для метода бисекции."""
     while True:
         try:
@@ -92,20 +35,30 @@ def get_bisection_params() -> tuple[float, float]:
             if a >= b:
                 print("Начало интервала должно быть меньше конца. Попробуйте снова.")
                 continue
+
+            if func(a)*func(b) >= 0:
+                print("Функция должна менять знак на концах интервала [a, b].")
+                continue
+
             return a, b
         except ValueError:
             print("Ошибка ввода, пожалуйста, введите числа.")
 
-def get_newton_params() -> tuple[float]:
+def get_newton_params(func: Func) -> tuple[float]:
     """Запрашивает у пользователя начальное приближение для метода Ньютона."""
     while True:
         try:
             initial_guess = float(input("Введите начальное приближение для метода Ньютона: "))
+
+            if func(initial_guess)*func.derivative2(initial_guess) <= 0:
+                print("Сходимость для приближения не выполняется.")
+                continue
+
             return initial_guess,
         except ValueError:
             print("Ошибка ввода, пожалуйста, введите число.")
 
-def get_method():
+def get_method(func: Func):
     """Запрашивает у пользователя выбор метода и возвращает его номер и параметры для него."""
     print("Выберите метод для нахождения корня уравнения:")
     print("1. Метод бисекции")
@@ -116,14 +69,14 @@ def get_method():
         try:
             method = int(input("Введите номер метода (1, 2 или 3): "))
             if method == 1:
-                params = get_bisection_params()
+                params = get_bisection_params(func)
                 return method, params
             elif method == 2:
-                params = get_newton_params()
+                params = get_newton_params(func)
                 return method, params
             elif method == 3:
-                bisection_params = get_bisection_params()
-                newton_params = get_newton_params()
+                bisection_params = get_bisection_params(func)
+                newton_params = get_newton_params(func)
                 return method, bisection_params, newton_params
             else:
                 print("Пожалуйста, выберите один из вариантов (1, 2 или 3).")

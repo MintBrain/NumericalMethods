@@ -1,28 +1,22 @@
-from lab1.input import get_precision, choose_equation_type, get_coefficients, get_user_equation, get_method
-from lab1.funcs import Func, Solver
+from input import get_precision, get_coefficients, get_method
+from funcs import Func, Solver
 
 
-def get_func(equation_type) -> Func:
+def get_func() -> Func:
     while True:
         try:
-            if equation_type == 1:
-                func = Func(*get_coefficients())
-            elif equation_type == 2:
-                func = get_user_equation()
-            return func
+            return Func(*get_coefficients())
         except Exception as e:
             print(f'Ошибка {e}')
             print('Попробуйте ввести данные заново.')
 
 
 def main():
-    equation_type = choose_equation_type()
-    func = get_func(equation_type)
-
+    func = get_func()
     precision = get_precision()
     solver = Solver(func, precision)
-
-    method, *params = get_method()
+    solver.plot()
+    method, *params = get_method(func)
 
     print()
     if method == 1:
@@ -35,10 +29,11 @@ def main():
 
 
 def test():
-    solver = Solver(Func(1,0,2,2))
+    solver = Solver(Func(1,0,6,-1))
     solver.plot()
+    solver.plot_function()
     solver.bisection_method(a=-2, b=2)
-    solver.newton_method(0)
+    solver.newton_method(1)
 
 
 if __name__ == '__main__':

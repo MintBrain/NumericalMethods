@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from prettytable import PrettyTable
+import matplotlib
+
+# matplotlib.use("TkAgg")
+
 
 def midpoint_of_interval(a: float, b: float) -> float:
     return (a + b) / 2.0
@@ -28,11 +32,15 @@ class Func:
 
     def __call__(self, x: float) -> float:
         """Вычисление значения функции f(x) = ax^3 + bx^2 + cx + d."""
-        return self.a * pow(x, 3) + self.b * pow(x, 2) + self.c * x + self.d
+        return (self.a * pow(x, 3)) + (self.b * pow(x, 2)) + (self.c * x) + self.d
 
     def derivative(self, x: float) -> float:
         """Вычисление значения производной f'(x) = 3ax^2 + 2bx + c."""
-        return 3 * self.a * pow(x, 2) + 2 * self.b * x + self.c
+        return (3 * self.a * pow(x, 2)) + (2 * self.b * x) + self.c
+
+    def derivative2(self, x: float) -> float:
+        """Вычисление значения производной f''(x) = 6ax + 2b."""
+        return (6 * self.a * x) + (2 * self.b)
 
 
 class Solver:
@@ -62,7 +70,6 @@ class Solver:
             f_mid = self.func(midpoint)
 
             t.add_row([counter, a, b, midpoint, f_mid, precision])
-            # print(f'Итерация {counter}: a={a};\tb={b};\tmidpoint={midpoint};\tF(mid)={f_mid};\tprecision={precision}')
 
             if f_mid == 0 or precision <= self.precision:
                 _root = midpoint
@@ -100,19 +107,13 @@ class Solver:
             precision = abs(f_x / f_prime_x)
             t.add_row([counter, x, f_x, f_prime_x, precision])
 
-            if abs(f_x) < self.precision:
+            if abs(f_x) < self.precision and precision <= self.precision:
                 print(t)
                 print(f'Корень уравнения равен = {x}\n')
                 return x  # Если достигли нужной точности, возвращаем корень
 
             x = x - f_x / f_prime_x
             counter += 1
-
-            # Проверка, достигли ли мы требуемой точности
-            if precision < self.precision:
-                print(t)
-                print(f'Корень уравнения равен = {x}\n')
-                return x
 
         print(t)
         print("Метод Ньютона не сошелся за указанное число итераций.")
@@ -147,12 +148,12 @@ class Solver:
         # Построим график
         plt.figure(figsize=(10, 6))
         plt.plot(x, y1, label=rf"$y = {self.func.a}x^3$", color='blue')
-        plt.plot(x, y2, label=rf"$y = {-self.func.b}x^2 {-self.func.c}x {-self.func.d}$", color='red')
+        plt.plot(x, y2, label=rf"$y = {-self.func.b:+}x^2 {-self.func.c:+}x {-self.func.d:+}$", color='red')
         plt.xlabel("x")
         plt.ylabel("y")
-        plt.title("Графики функций $y = x^3$ и $y = -2x - 2$")
+        plt.title("Графики функций")
         plt.axhline(0, color='black', linewidth=0.5)
         plt.axvline(0, color='black', linewidth=0.5)
         plt.legend()
         plt.grid(True)
-        plt.show(block=False)
+        plt.show()
