@@ -1,4 +1,4 @@
-from prettytable import PrettyTable  # Для красивого вывода
+from prettytable import PrettyTable
 
 
 def print_init_table(n, a, b, c, d):
@@ -20,6 +20,25 @@ def print_result_table(n, U, V, X):
 
     print("\nИтоговая таблица коэффициентов:")
     print(table)
+
+
+def check(x, a, b, c, d):
+    n = len(d)
+    r = [0] * n  # Вектор невязок
+
+    for i in range(n):
+        _a = a[i] * x[i - 1] if i > 0 else 0
+        _c = c[i] * x[i + 1] if i < n - 1 else 0
+        r[i] = d[i] - _a - (b[i] * x[i]) - _c
+
+    print("\nВектор невязок:", [round(_r, 3) for _r in r])
+
+    _result = all([round(_r, 1) == 0 for _r in r])
+    if _result:
+        print('Проверка: Решение верно')
+    else:
+        print('Проверка: Решение не верно')
+    return r
 
 
 def solve_tridiagonal(a: list[float], b: list[float], c: list[float], d: list[float]) -> list[float]:
@@ -111,6 +130,7 @@ def test():
 
     print_init_table(len(d), a, b, c, d)
     solution = solve_tridiagonal(a, b, c, d)
+    check(solution, a, b, c, d)
 
     # print(717126 / 314285)
     # print(173552 / 62857)
@@ -121,7 +141,8 @@ def test():
 def main():
     args = _input()
     solution = solve_tridiagonal(*args)
+    check(solution, *args)
 
 
 if __name__ == '__main__':
-    main()
+    test()
