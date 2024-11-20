@@ -1,6 +1,18 @@
 from tabulate import tabulate
 
 
+def check(a,b,x):
+    res = 0
+    for i,_a in enumerate(a[0]):
+        res += _a*x[i]
+    print("Проверка:")
+    if res == b[0]:
+        print("Корни верны")
+    else:
+        print("Корни не верны")
+    print()
+
+
 def gauss_elimination(a: list[list[float]], b: list[float]):
     n = len(b)
     # Прямой ход метода Гаусса
@@ -101,8 +113,14 @@ def main():
     print("\nНачальная система уравнений:")
     print(tabulate([row + [b[i]] for i, row in enumerate(a)], headers=[f"x{j + 1}" for j in range(len(a))] + ["b"]))
     print()
-
-    solution = gauss_elimination(a, b)
+    _a = [[n for n in x] for x in a]
+    _b = [x + 0 for x in b]
+    try:
+        solution = gauss_elimination(_a, _b)
+    except Exception as e:
+        print("Решение не найдено")
+        return
+    check(a,b,solution)
 
     print("Решение:")
     for i in range(len(a)):
