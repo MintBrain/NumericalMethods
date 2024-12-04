@@ -8,6 +8,7 @@ numpy = "*"
 matplotlib = "*"
 prettytable = "*"
 sympy = "*"
+pyqt6 = "*"
 
 [dev-packages]
 
