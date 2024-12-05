@@ -1,5 +1,8 @@
-from graph import plot_polynomials, evaluate_lagrange, evaluate_newton
+from graph import evaluate_lagrange, evaluate_newton, plot_polynomials
+import matplotlib
 
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 
 def lagrange_polynomial(x_values, y_values):
     """
@@ -120,10 +123,15 @@ def point_input(x,y):
             # Вычисление результата
             if method == "1":
                 y_eval = evaluate_lagrange(x, y, x_eval)
-                print(f"\nЗначение полинома Лагранжа в точке x = {x_eval}: y = {y_eval:.6f}")
+                print(f"\nЗначение полинома Лагранжа в точке x = {x_eval}: y = {y_eval:.2f}")
             else:
                 y_eval = evaluate_newton(x, y, x_eval)
-                print(f"\nЗначение полинома Ньютона в точке x = {x_eval}: y = {y_eval:.6f}")
+                print(f"\nЗначение полинома Ньютона в точке x = {x_eval}: y = {y_eval:.2f}")
+
+            plt.scatter(x_eval, y_eval, color="blue", label=f"Точка ({x_eval}, {y_eval:.2f})", linewidths=6)
+            plt.legend()
+            plt.draw()
+            plt.pause(0.3)
 
             # Спрашиваем, хочет ли пользователь продолжить
             continue_choice = input("\nХотите вычислить ещё одну точку? (да/нет): ").strip().lower()
@@ -148,6 +156,7 @@ def program(x, y):
 
     print("\nИнтерполяционный полином Ньютона:")
     print(newton)
+
     plot_polynomials(x, y)
     print()
     point_input(x,y)

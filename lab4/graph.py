@@ -1,8 +1,11 @@
 import numpy as np
 from sympy import symbols, simplify, latex
 from sympy.parsing.sympy_parser import parse_expr
-import matplotlib.pyplot as plt
 import matplotlib
+
+matplotlib.use('TkAgg')
+
+import matplotlib.pyplot as plt
 
 
 def evaluate_lagrange(x_points, y_points, x_eval):
@@ -52,7 +55,6 @@ def evaluate_newton(x_points, y_points, x_eval):
 
     return result
 
-
 def plot_polynomials(x_points, y_points):
     """
     Строит графики интерполяционных полиномов Лагранжа и Ньютона.
@@ -83,5 +85,8 @@ def plot_polynomials(x_points, y_points):
     plt.grid(True)
 
     # Показать график
-    plt.show(block=False)
-    plt.pause(0.1)
+    plt.ion()
+    plt.show()
+    # plt.draw()
+    plt.pause(0.3)
+
