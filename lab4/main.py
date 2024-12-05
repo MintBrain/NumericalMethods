@@ -1,4 +1,4 @@
-from graph import plot_polynomials
+from graph import plot_polynomials, evaluate_lagrange, evaluate_newton
 
 
 def lagrange_polynomial(x_values, y_values):
@@ -102,6 +102,41 @@ def input_points() -> tuple[list[float], list[float]]:
             print("Попробуйте снова.\n")
 
 
+def point_input(x,y):
+    while True:
+        try:
+            # Выбор метода
+            print("\nВыберите метод для расчета точки:")
+            print("1. Лагранжа")
+            print("2. Ньютона")
+            method = input("Введите номер метода (1 или 2): ").strip()
+
+            if method not in {"1", "2"}:
+                raise ValueError("Неверный выбор метода. Введите 1 или 2.")
+
+            # Ввод точки
+            x_eval = float(input("Введите значение x, для которого хотите вычислить y: ").strip())
+
+            # Вычисление результата
+            if method == "1":
+                y_eval = evaluate_lagrange(x, y, x_eval)
+                print(f"\nЗначение полинома Лагранжа в точке x = {x_eval}: y = {y_eval:.6f}")
+            else:
+                y_eval = evaluate_newton(x, y, x_eval)
+                print(f"\nЗначение полинома Ньютона в точке x = {x_eval}: y = {y_eval:.6f}")
+
+            # Спрашиваем, хочет ли пользователь продолжить
+            continue_choice = input("\nХотите вычислить ещё одну точку? (да/нет): ").strip().lower()
+            if continue_choice not in {"да", "yes", "y"}:
+                print("Работа завершена.")
+                break
+
+        except ValueError as ve:
+            print(f"Ошибка ввода: {ve}. Попробуйте снова.")
+        except Exception as err:
+            print(f"Произошла ошибка: {err}. Попробуйте снова.")
+
+
 def program(x, y):
     # Построение полиномов
     lagrange = lagrange_polynomial(x, y)
@@ -114,6 +149,9 @@ def program(x, y):
     print("\nИнтерполяционный полином Ньютона:")
     print(newton)
     plot_polynomials(x, y)
+    print()
+    point_input(x,y)
+
 
 
 def test():

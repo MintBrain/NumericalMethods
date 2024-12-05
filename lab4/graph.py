@@ -83,4 +83,5 @@ def plot_polynomials(x_points, y_points):
     plt.grid(True)
 
     # Показать график
-    plt.show()
+    plt.show(block=False)
+    plt.pause(0.1)
