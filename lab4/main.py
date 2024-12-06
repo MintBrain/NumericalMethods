@@ -46,7 +46,7 @@ def newton_polynomial(x_values, y_values):
     n = len(x_values)
 
     # Вычисление разделенных разностей
-    divided_diff = [y_values[:]]
+    divided_diff: list[list[float]] = [y_values[:]]
     for level in range(1, n):
         diffs = []
         for i in range(n - level):
