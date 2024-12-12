@@ -191,12 +191,52 @@ def validate_polynomial_approximation(x_values, y_values, a, b, c):
 
 
 def program(x, y):
-    # Линейная аппроксимация (степень 1)
-    linear_coeffs = linear_least_squares(x, y)
-    validate_approximation(x, y, linear_coeffs[0], linear_coeffs[1])
-    print()
-    polynomial_coeffs = polynomial_least_squares(x, y)
-    validate_polynomial_approximation(x, y, polynomial_coeffs[0], polynomial_coeffs[1], polynomial_coeffs[2])
+    try:
+        # Линейная аппроксимация (степень 1)
+        linear_coeffs = linear_least_squares(x, y)
+        validate_approximation(x, y, linear_coeffs[0], linear_coeffs[1])
+        print()
+        polynomial_coeffs = polynomial_least_squares(x, y)
+        validate_polynomial_approximation(x, y, polynomial_coeffs[0], polynomial_coeffs[1], polynomial_coeffs[2])
+    except Exception as err:
+        print("Ошибка работы программы")
+
+
+def read_points_from_console():
+    """
+    Считывает точки (x, y) из консоли с проверкой ввода.
+    :return: Два списка: x_values и y_values.
+    """
+    while True:
+        try:
+            print("Введите количество точек:")
+            n = int(input().strip())  # Считываем количество точек
+
+            if n <= 2:
+                print("Количество точек должно быть больше 2. Попробуйте снова.")
+                continue
+
+            break
+        except ValueError:
+            print("Ошибка ввода. Введите корректное целое число.")
+
+    x_values = []
+    y_values = []
+
+    print("Введите точки в формате 'x y', одну точку на строку:")
+    for i in range(n):
+        while True:
+            try:
+                line = input(f"Точка {i + 1}: ").strip()
+                x, y = map(float, line.split())
+                x_values.append(x)
+                y_values.append(y)
+                break  # Выходим из внутреннего цикла, если точка введена корректно
+            except ValueError:
+                print(
+                    "Ошибка ввода. Убедитесь, что точка вводится как два числа, разделённые пробелом. Попробуйте снова.")
+
+    return x_values, y_values
 
 
 def test():
@@ -215,7 +255,8 @@ def test():
 
 
 def main():
-    pass
+    program(*read_points_from_console())
+
 
 if __name__ == '__main__':
-    test()
+    main()
