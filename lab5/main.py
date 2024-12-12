@@ -46,38 +46,32 @@ def verify_cubic_spline(cubic_spline_fn, x_values, y_values):
     return True
 
 
-def gauss_elimination(a: list[list[float]], b: list[float]):
-    n = len(b)
-    # Прямой ход метода Гаусса
-    for i in range(n):
-        # Поиск максимального элемента для избежания вырождения
-        max_row = i
-        for k in range(i + 1, n):
-            if abs(a[k][i]) > abs(a[max_row][i]):
-                max_row = k
-        # Поменять строки местами
-        a[i], a[max_row] = a[max_row], a[i]
-        b[i], b[max_row] = b[max_row], b[i]
+def solve_tridiagonal(a: list[float], b: list[float], c: list[float], d: list[float]) -> list[float]:
+    n = len(d)
+    if len(a) != n or len(b) != n or len(c) != n:
+        raise ValueError("Размеры векторов a, b, c, d должны совпадать.")
 
-        # Обнуление элементов ниже текущего
-        for k in range(i + 1, n):
-            factor = a[k][i] / a[i][i]
-            for j in range(i, n):
-                a[k][j] -= factor * a[i][j]
-            b[k] -= factor * b[i]
+    # Прямой ход
+    U: list[float] = [0] * n
+    V: list[float] = [0] * n
 
-        # Отображение промежуточных шагов
-        print(f"Шаг {i + 1}:")
-        print(tabulate([row + [b[i]] for i, row in enumerate(a)], headers=[f"x{j + 1}" for j in range(n)] + ["b"]))
-        print()
+    # Инициализация для первого элемента
+    U[0] = -c[0] / b[0]
+    V[0] = d[0] / b[0]
+
+    for i in range(1, n):
+        denominator = a[i] * U[i - 1] + b[i]
+        if denominator == 0:
+            raise ZeroDivisionError("Обнаружена нулевая диагональ, система неразрешима.")
+        U[i] = -c[i] / denominator
+        V[i] = (d[i] - a[i] * V[i - 1]) / denominator
 
     # Обратный ход
     x: list[float] = [0] * n
-    for i in range(n - 1, -1, -1):
-        x[i] = b[i]
-        for j in range(i + 1, n):
-            x[i] -= a[i][j] * x[j]
-        x[i] /= a[i][i]
+    x[-1] = V[-1]
+
+    for i in range(n - 2, -1, -1):
+        x[i] = U[i] * x[i + 1] + V[i]
 
     return x
 
@@ -89,45 +83,49 @@ def cubic_spline_interpolation(x_points, y_points, x_new):
     # Шаги между точками
     h = [x_points[i + 1] - x_points[i] for i in range(n)]
 
-    # Матрица A и правая часть b для решения системы
-    A = [[0, 0, 0] for _ in range(n+1)]  # создаём (n+1) строк для A
-    b = [0] * (n + 1)
+    # Вектора a, b, c и d для метода прогонки
+    a = [0] * n      # Поддиагональ (a[i] - h[i-1])
+    b = [0] * (n + 1)  # Главная диагональ (b[i])
+    c = [0] * n      # Наддиагональ (c[i] - h[i])
+    d = [0] * (n + 1)  # Правая часть (d[i])
 
     # Граничные условия (вторые производные на концах равны 0)
-    A[0] = [1, 0, 0]  # Для первого узла
-    A[n] = [0, 1, 0]  # Для последнего узла
-    b[0] = 0
-    b[n] = 0
+    b[0] = 1
+    b[n] = 1
+    d[0] = 0
+    d[n] = 0
 
     # Заполнение системы для c_i (вторые производные)
     for i in range(1, n):
-        A[i][0] = h[i - 1]
-        A[i][1] = 2 * (h[i - 1] + h[i])
-        A[i][2] = h[i]
-        b[i] = 3 * ((y_points[i + 1] - y_points[i]) / h[i] - (y_points[i] - y_points[i - 1]) / h[i - 1])
+        a[i] = h[i - 1]      # Поддиагональ
+        b[i] = 2 * (h[i - 1] + h[i])  # Главная диагональ
+        c[i] = h[i]          # Наддиагональ
+        d[i] = 3 * ((y_points[i + 1] - y_points[i]) / h[i] - (y_points[i] - y_points[i - 1]) / h[i - 1])  # Правая часть
 
     # Решение системы для c_i с помощью метода прогонки
-    c = gauss_elimination(A, b)  # Обратите внимание на n+1 здесь
+    c_vals = solve_tridiagonal(a, b, c, d)
 
     # Вычисление коэффициентов b_i и d_i
     b_coeff = [0] * n
     d_coeff = [0] * n
 
     for i in range(n):
-        b_coeff[i] = (y_points[i + 1] - y_points[i]) / h[i] - h[i] * (c[i + 1] + 2 * c[i]) / 3
-        d_coeff[i] = (c[i + 1] - c[i]) / (3 * h[i])
+        b_coeff[i] = (y_points[i + 1] - y_points[i]) / h[i] - h[i] * (c_vals[i + 1] + 2 * c_vals[i]) / 3
+        d_coeff[i] = (c_vals[i + 1] - c_vals[i]) / (3 * h[i])
 
     # Находим нужный интервал для точки x_new
+    _i = 0
     for i in range(n):
         if x_points[i] <= x_new < x_points[i + 1]:
+            # Теперь переменная i определена, и мы можем использовать её для дальнейших вычислений
             break
+        _i = i
 
     # Вычисляем значение сплайна в точке x_new
-    dx = x_new - x_points[i]
-    y_new = (y_points[i] + b_coeff[i] * dx + c[i] * dx ** 2 + d_coeff[i] * dx ** 3)
+    dx = x_new - x_points[_i]
+    y_new = (y_points[_i] + b_coeff[_i] * dx + c_vals[_i] * dx ** 2 + d_coeff[_i] * dx ** 3)
 
     return y_new
-
 
 # Ввод данных
 def input_points():
