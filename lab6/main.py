@@ -1,8 +1,46 @@
-from colorsys import yiq_to_rgb
-
 import matplotlib.pyplot as plt
 import numpy as np
 from prettytable import PrettyTable
+
+
+def plot_approximations(x_values, y_values, a_linear, b_linear, a_poly, b_poly, c_poly):
+    """
+    Строит графики для линейной и полиномиальной аппроксимации.
+    :param x_values: Список значений x.
+    :param y_values: Список значений y.
+    :param a_linear: Коэффициент a для линейной аппроксимации.
+    :param b_linear: Коэффициент b для линейной аппроксимации.
+    :param a_poly: Коэффициент a для полиномиальной аппроксимации (y = ax^2 + bx + c).
+    :param b_poly: Коэффициент b для полиномиальной аппроксимации (y = ax^2 + bx + c).
+    :param c_poly: Коэффициент c для полиномиальной аппроксимации (y = ax^2 + bx + c).
+    """
+    # Генерация значений y для линейной аппроксимации
+    y_linear = [a_linear * x + b_linear for x in x_values]
+
+    # Генерация значений y для полиномиальной аппроксимации
+    y_poly = [a_poly * x**2 + b_poly * x + c_poly for x in x_values]
+
+    # Построение графиков
+    plt.figure(figsize=(10, 6))
+
+    # Исходные точки
+    plt.scatter(x_values, y_values, color='black', label="Исходные данные")
+
+    # Линейная аппроксимация
+    plt.plot(x_values, y_linear, color='blue', label=f"Линейная аппроксимация: y = {a_linear:.3f}x + {b_linear:.3f}")
+
+    # Полиномиальная аппроксимация
+    plt.plot(x_values, y_poly, color='red', label=f"Полиномиальная аппроксимация: y = {a_poly:.3f}x^2 + {b_poly:.3f}x + {c_poly:.3f}")
+
+    # Оформление графика
+    plt.title("Сравнение линейной и полиномиальной аппроксимации")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.legend()
+    plt.grid(True)
+
+    # Показать график
+    plt.show()
 
 
 # Решение системы уравнений методом Крамера
@@ -198,6 +236,8 @@ def program(x, y):
         print()
         polynomial_coeffs = polynomial_least_squares(x, y)
         validate_polynomial_approximation(x, y, polynomial_coeffs[0], polynomial_coeffs[1], polynomial_coeffs[2])
+
+        plot_approximations(x, y, *linear_coeffs, *polynomial_coeffs)
     except Exception as err:
         print("Ошибка работы программы")
 
@@ -259,4 +299,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    test()
