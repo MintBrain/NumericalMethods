@@ -46,52 +46,69 @@ def verify_cubic_spline(cubic_spline_fn, x_values, y_values):
     return True
 
 
-def cubic_spline_interpolation(x_values, y_values, query_point):
-    """
-    Интерполяция кубическим сплайном.
-    :param x_values: Список значений x (должен быть отсортирован).
-    :param y_values: Список значений y, соответствующих x.
-    :param query_point: Точка, для которой требуется значение.
-    :return: Интерполированное значение в query_point.
-    """
-    n = len(x_values) - 1  # Количество интервалов
-    h = [x_values[i + 1] - x_values[i] for i in range(n)]
+def tridiagonal_algorithm(A, b, n):
+    # Прогонка для решения трёхдиагональной системы линейных уравнений
+    # A - трёхдиагональная матрица, b - правая часть, n - размерность
+    c = [0] * n
 
-    # Вычисление коэффициентов уравнений для второй производной
-    alpha = [0] * (n + 1)
+    # Прямой ход
     for i in range(1, n):
-        alpha[i] = (3 / h[i]) * (y_values[i + 1] - y_values[i]) - (3 / h[i - 1]) * (y_values[i] - y_values[i - 1])
+        factor = A[i - 1][0] / A[i - 1][1]
+        A[i][1] -= factor * A[i - 1][2]
+        b[i] -= factor * b[i - 1]
 
-    # Решение трёхдиагональной системы
-    l = [1] + [0] * n
-    mu = [0] * (n + 1)
-    z = [0] * (n + 1)
+    # Обратный ход
+    c[n - 1] = b[n - 1] / A[n - 1][1]
+    for i in range(n - 2, -1, -1):
+        c[i] = (b[i] - A[i][2] * c[i + 1]) / A[i][1]
 
+    return c
+
+
+def cubic_spline_interpolation(x_points, y_points, x_new):
+    # Количество данных точек
+    n = len(x_points) - 1
+
+    # Шаги между точками
+    h = [x_points[i + 1] - x_points[i] for i in range(n)]
+
+    # Матрица A и правая часть b для решения системы
+    A = [[0, 2 * (h[i - 1] + h[i]), 0] for i in range(1, n)]
+    b = [0] * (n + 1)
+
+    # Граничные условия (вторые производные на концах равны 0)
+    A[0] = [1, 0, 0]
+    A[n - 1] = [0, 1, 0]
+    b[0] = 0
+    b[n] = 0
+
+    # Заполнение системы для c_i (вторые производные)
     for i in range(1, n):
-        l[i] = 2 * (x_values[i + 1] - x_values[i - 1]) - h[i - 1] * mu[i - 1]
-        mu[i] = h[i] / l[i]
-        z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i]
+        A[i][0] = h[i - 1]
+        A[i][2] = h[i]
+        b[i] = 3 * ((y_points[i + 1] - y_points[i]) / h[i] - (y_points[i] - y_points[i - 1]) / h[i - 1])
 
-    l[n] = 1
-    z[n] = 0
+    # Решение системы для c_i с помощью метода прогонки
+    c = tridiagonal_algorithm(A, b, n)
 
-    c = [0] * (n + 1)
-    b = [0] * n
-    d = [0] * n
-    a = y_values[:-1]
+    # Вычисление коэффициентов b_i и d_i
+    b_coeff = [0] * n
+    d_coeff = [0] * n
 
-    for j in range(n - 1, -1, -1):
-        c[j] = z[j] - mu[j] * c[j + 1]
-        b[j] = (y_values[j + 1] - y_values[j]) / h[j] - h[j] * (c[j + 1] + 2 * c[j]) / 3
-        d[j] = (c[j + 1] - c[j]) / (3 * h[j])
-
-    # Найти соответствующий интервал для query_point
     for i in range(n):
-        if x_values[i] <= query_point <= x_values[i + 1]:
-            dx = query_point - x_values[i]
-            return a[i] + b[i] * dx + c[i] * dx ** 2 + d[i] * dx ** 3
+        b_coeff[i] = (y_points[i + 1] - y_points[i]) / h[i] - h[i] * (c[i + 1] + 2 * c[i]) / 3
+        d_coeff[i] = (c[i + 1] - c[i]) / (3 * h[i])
 
-    raise ValueError("Точка вне диапазона интерполяции.")
+    # Находим нужный интервал для точки x_new
+    for i in range(n):
+        if x_points[i] <= x_new < x_points[i + 1]:
+            break
+
+    # Вычисляем значение сплайна в точке x_new
+    dx = x_new - x_points[i]
+    y_new = (y_points[i] + b_coeff[i] * dx + c[i] * dx ** 2 + d_coeff[i] * dx ** 3)
+
+    return y_new
 
 
 # Ввод данных
@@ -170,3 +187,4 @@ if __name__ == "__main__":
         test()
     except Exception as e:
         print('Ошибка выполнения программы')
+        print(e)
