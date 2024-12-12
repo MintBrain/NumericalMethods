@@ -46,23 +46,40 @@ def verify_cubic_spline(cubic_spline_fn, x_values, y_values):
     return True
 
 
-def tridiagonal_algorithm(A, b, n):
-    # Прогонка для решения трёхдиагональной системы линейных уравнений
-    # A - трёхдиагональная матрица, b - правая часть, n - размерность
-    c = [0] * n
+def gauss_elimination(a: list[list[float]], b: list[float]):
+    n = len(b)
+    # Прямой ход метода Гаусса
+    for i in range(n):
+        # Поиск максимального элемента для избежания вырождения
+        max_row = i
+        for k in range(i + 1, n):
+            if abs(a[k][i]) > abs(a[max_row][i]):
+                max_row = k
+        # Поменять строки местами
+        a[i], a[max_row] = a[max_row], a[i]
+        b[i], b[max_row] = b[max_row], b[i]
 
-    # Прямой ход
-    for i in range(1, n):
-        factor = A[i - 1][0] / A[i - 1][1]
-        A[i][1] -= factor * A[i - 1][2]
-        b[i] -= factor * b[i - 1]
+        # Обнуление элементов ниже текущего
+        for k in range(i + 1, n):
+            factor = a[k][i] / a[i][i]
+            for j in range(i, n):
+                a[k][j] -= factor * a[i][j]
+            b[k] -= factor * b[i]
+
+        # Отображение промежуточных шагов
+        print(f"Шаг {i + 1}:")
+        print(tabulate([row + [b[i]] for i, row in enumerate(a)], headers=[f"x{j + 1}" for j in range(n)] + ["b"]))
+        print()
 
     # Обратный ход
-    c[n - 1] = b[n - 1] / A[n - 1][1]
-    for i in range(n - 2, -1, -1):
-        c[i] = (b[i] - A[i][2] * c[i + 1]) / A[i][1]
+    x: list[float] = [0] * n
+    for i in range(n - 1, -1, -1):
+        x[i] = b[i]
+        for j in range(i + 1, n):
+            x[i] -= a[i][j] * x[j]
+        x[i] /= a[i][i]
 
-    return c
+    return x
 
 
 def cubic_spline_interpolation(x_points, y_points, x_new):
@@ -73,23 +90,24 @@ def cubic_spline_interpolation(x_points, y_points, x_new):
     h = [x_points[i + 1] - x_points[i] for i in range(n)]
 
     # Матрица A и правая часть b для решения системы
-    A = [[0, 2 * (h[i - 1] + h[i]), 0] for i in range(1, n)]
+    A = [[0, 0, 0] for _ in range(n+1)]  # создаём (n+1) строк для A
     b = [0] * (n + 1)
 
     # Граничные условия (вторые производные на концах равны 0)
-    A[0] = [1, 0, 0]
-    A[n - 1] = [0, 1, 0]
+    A[0] = [1, 0, 0]  # Для первого узла
+    A[n] = [0, 1, 0]  # Для последнего узла
     b[0] = 0
     b[n] = 0
 
     # Заполнение системы для c_i (вторые производные)
     for i in range(1, n):
         A[i][0] = h[i - 1]
+        A[i][1] = 2 * (h[i - 1] + h[i])
         A[i][2] = h[i]
         b[i] = 3 * ((y_points[i + 1] - y_points[i]) / h[i] - (y_points[i] - y_points[i - 1]) / h[i - 1])
 
     # Решение системы для c_i с помощью метода прогонки
-    c = tridiagonal_algorithm(A, b, n)
+    c = gauss_elimination(A, b)  # Обратите внимание на n+1 здесь
 
     # Вычисление коэффициентов b_i и d_i
     b_coeff = [0] * n
