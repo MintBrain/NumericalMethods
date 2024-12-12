@@ -1,3 +1,51 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+def plot_cubic_spline(x_values, y_values, cubic_spline_fn, num_points=100):
+    """
+    Строит график кубического сплайна.
+    :param x_values: Список значений x (должен быть отсортирован).
+    :param y_values: Список значений y, соответствующих x.
+    :param cubic_spline_fn: Функция для интерполяции (например, cubic_spline_interpolation).
+    :param num_points: Количество точек для построения плавной кривой.
+    """
+    # Подготовить данные для графика
+    x_dense = np.linspace(x_values[0], x_values[-1], num_points)
+    y_dense = [cubic_spline_fn(x_values, y_values, x) for x in x_dense]
+
+    # Построить график
+    plt.figure(figsize=(8, 6))
+    plt.plot(x_dense, y_dense, label="Кубический сплайн", color="blue")
+    plt.scatter(x_values, y_values, color="red", label="Исходные точки")  # Маркеры исходных точек
+    plt.title("Интерполяция кубическим сплайном")
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.legend()
+    plt.grid(True)
+    plt.ion()
+    plt.show()
+    plt.pause(0.2)
+
+
+def verify_cubic_spline(cubic_spline_fn, x_values, y_values):
+    """
+    Проверяет корректность кубического сплайна.
+    :param cubic_spline_fn: Функция для интерполяции (например, cubic_spline_interpolation).
+    :param x_values: Список значений x.
+    :param y_values: Список значений y.
+    :return: True, если проверка пройдена, иначе False.
+    """
+    for x, y in zip(x_values, y_values):
+        interpolated_value = cubic_spline_fn(x_values, y_values, x)
+        if not abs(interpolated_value - y) < 1e-6:  # Допустимая погрешность
+            print(f"Ошибка: в точке x = {x}, ожидается y = {y}, получено {interpolated_value}")
+            return False
+
+    print("Проверка успешно пройдена: все узловые точки совпадают.")
+    return True
+
+
 def cubic_spline_interpolation(x_values, y_values, query_point):
     """
     Интерполяция кубическим сплайном.
@@ -75,17 +123,31 @@ def input_points():
 
 def program(x, y):
     print("Кубическая интерполяция сплайнами")
-    x_values, y_values = x, y
+
+    # Проверка корректности
+    is_valid = verify_cubic_spline(cubic_spline_interpolation, x, y)
+    if is_valid:
+        print("Сплайн корректен.")
+    else:
+        print("В сплайне есть ошибки.")
+        return
+
+    plot_cubic_spline(x, y, cubic_spline_interpolation)
 
     while True:
         try:
             query_point = float(input("Введите точку для интерполяции (или 'q' для выхода): "))
-            if query_point < min(x_values) or query_point > max(x_values):
+            if query_point < min(x) or query_point > max(x):
                 print("Точка вне диапазона входных данных.")
                 continue
 
-            result = cubic_spline_interpolation(x_values, y_values, query_point)
+            result = cubic_spline_interpolation(x, y, query_point)
             print(f"Интерполированное значение в точке {query_point}: {result}")
+
+            plt.scatter(query_point, result, color="blue", label=f"Точка ({query_point}, {result:.2f})", linewidths=6)
+            plt.legend()
+            plt.draw()
+            plt.pause(0.3)
         except ValueError:
             print("Выход из программы.")
             break
@@ -94,7 +156,9 @@ def program(x, y):
 def test():
     x = [1, 1.2, 1.4, 1.6, 1.8, 2]
     y = [1.2, 2, 3, 3.8, 5, 6.1]
+
     program(x, y)
+
 
 def main():
     x, y = input_points()
@@ -102,4 +166,7 @@ def main():
 
 
 if __name__ == "__main__":
-    test()
+    try:
+        test()
+    except Exception as e:
+        print('Ошибка выполнения программы')
