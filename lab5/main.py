@@ -75,6 +75,9 @@ def cubic_spline_interpolation(x_points: list[float], y_points: list[float], x_n
     if n < 2:
         raise ValueError("Должно быть хотя бы два узла интерполяции.")
 
+    if any(x_points[i] >= x_points[i + 1] for i in range(n - 1)):
+        raise ValueError("Узлы интерполяции должны быть строго возрастающими.")
+
     # Инициализация массивов
     h: list[float] = [0] * n
     a: list[float] = [0] * n
@@ -88,6 +91,9 @@ def cubic_spline_interpolation(x_points: list[float], y_points: list[float], x_n
     # Вычисление h[i]
     for i in range(1, n):
         h[i] = x_points[i] - x_points[i - 1]
+
+    if any(h[i] == 0 for i in range(1, n)):
+        raise ValueError("Узлы интерполяции x_points должны быть уникальными и не совпадать.")
 
     # Формирование трёхдиагональной системы
     for i in range(2, n):
