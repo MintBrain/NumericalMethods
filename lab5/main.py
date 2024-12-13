@@ -46,86 +46,76 @@ def verify_cubic_spline(cubic_spline_fn, x_values, y_values):
     return True
 
 
-def solve_tridiagonal(a: list[float], b: list[float], c: list[float], d: list[float]) -> list[float]:
-    n = len(d)
-    if len(a) != n or len(b) != n or len(c) != n:
-        raise ValueError("Размеры векторов a, b, c, d должны совпадать.")
+def solve_tridiagonal(n, _a, _b, _c, _d):
+    u: list[float] = [0] * n
+    v: list[float] = [0] * n
+    c: list[float] = [0] * (n + 1)
 
-    # Прямой ход
-    U: list[float] = [0] * n
-    V: list[float] = [0] * n
-
-    # Инициализация для первого элемента
-    U[0] = -c[0] / b[0]
-    V[0] = d[0] / b[0]
-
-    for i in range(1, n):
-        denominator = a[i] * U[i - 1] + b[i]
+    # Прямой ход метода прогонки
+    for i in range(2, n):
+        denominator = _a[i] * u[i - 1] + _b[i]
         if denominator == 0:
             raise ZeroDivisionError("Обнаружена нулевая диагональ, система неразрешима.")
-        U[i] = -c[i] / denominator
-        V[i] = (d[i] - a[i] * V[i - 1]) / denominator
+        u[i] = -_c[i] / denominator
+        v[i] = (_d[i] - _a[i] * v[i - 1]) / denominator
 
-    # Обратный ход
-    x: list[float] = [0] * n
-    x[-1] = V[-1]
+    # Назначение краевых условий
+    c[1] = 0
+    c[n] = 0
 
-    for i in range(n - 2, -1, -1):
-        x[i] = U[i] * x[i + 1] + V[i]
+    # Обратный ход метода прогонки
+    for i in range(n - 1, 1, -1):
+        c[i] = u[i] * c[i + 1] + v[i]
 
-    return x
+    return c
 
 
-def cubic_spline_interpolation(x_points, y_points, x_new):
-    # Количество данных точек
-    n = len(x_points) - 1
+def cubic_spline_interpolation(x_points: list[float], y_points: list[float], x_new: float):
+    n = len(x_points)
+    if n < 2:
+        raise ValueError("Должно быть хотя бы два узла интерполяции.")
 
-    # Шаги между точками
-    h = [x_points[i + 1] - x_points[i] for i in range(n)]
+    # Инициализация массивов
+    h: list[float] = [0] * n
+    a: list[float] = [0] * n
+    b: list[float] = [0] * n
+    d: list[float] = [0] * n
+    _a: list[float] = [0] * n
+    _b: list[float] = [0] * n
+    _c: list[float] = [0] * n
+    _d: list[float] = [0] * n
 
-    # Вектора a, b, c и d для метода прогонки
-    a = [0] * n      # Поддиагональ (a[i] - h[i-1])
-    b = [0] * (n + 1)  # Главная диагональ (b[i])
-    c = [0] * n      # Наддиагональ (c[i] - h[i])
-    d = [0] * (n + 1)  # Правая часть (d[i])
-
-    # Граничные условия (вторые производные на концах равны 0)
-    b[0] = 1
-    b[n] = 1
-    d[0] = 0
-    d[n] = 0
-
-    # Заполнение системы для c_i (вторые производные)
+    # Вычисление h[i]
     for i in range(1, n):
-        a[i] = h[i - 1]      # Поддиагональ
-        b[i] = 2 * (h[i - 1] + h[i])  # Главная диагональ
-        c[i] = h[i]          # Наддиагональ
-        d[i] = 3 * ((y_points[i + 1] - y_points[i]) / h[i] - (y_points[i] - y_points[i - 1]) / h[i - 1])  # Правая часть
+        h[i] = x_points[i] - x_points[i - 1]
 
-    # Решение системы для c_i с помощью метода прогонки
-    c_vals = solve_tridiagonal(a, b, c, d)
+    # Формирование трёхдиагональной системы
+    for i in range(2, n):
+        _a[i] = h[i - 1]
+        _b[i] = 2 * (h[i - 1] + h[i])
+        _c[i] = h[i]
+        _d[i] = 3 * ((y_points[i] - y_points[i - 1]) / h[i] - (y_points[i - 1] - y_points[i - 2]) / h[i - 1])
 
-    # Вычисление коэффициентов b_i и d_i
-    b_coeff = [0] * n
-    d_coeff = [0] * n
+    c = solve_tridiagonal(n, _a, _b, _c, _d)
 
-    for i in range(n):
-        b_coeff[i] = (y_points[i + 1] - y_points[i]) / h[i] - h[i] * (c_vals[i + 1] + 2 * c_vals[i]) / 3
-        d_coeff[i] = (c_vals[i + 1] - c_vals[i]) / (3 * h[i])
+    # Вычисление коэффициентов a, b, d
+    for i in range(1, n):
+        a[i] = y_points[i - 1]
+        d[i] = (c[i + 1] - c[i]) / (3 * h[i])
+        b[i] = (y_points[i] - y_points[i - 1]) / h[i] - h[i] / 3 * (c[i + 1] + 2 * c[i])
 
-    # Находим нужный интервал для точки x_new
-    _i = 0
-    for i in range(n):
-        if x_points[i] <= x_new < x_points[i + 1]:
-            # Теперь переменная i определена, и мы можем использовать её для дальнейших вычислений
+    # Поиск подходящего интервала для x_new
+    for k in range(1, n):
+        if x_points[k - 1] <= x_new <= x_points[k]:
             break
-        _i = i
+    else:
+        raise ValueError("Значение x_new выходит за пределы интервала.")
 
-    # Вычисляем значение сплайна в точке x_new
-    dx = x_new - x_points[_i]
-    y_new = (y_points[_i] + b_coeff[_i] * dx + c_vals[_i] * dx ** 2 + d_coeff[_i] * dx ** 3)
+    # Интерполяция
+    dx = x_new - x_points[k - 1]
+    result = a[k] + b[k] * dx + c[k] * dx ** 2 + d[k] * dx ** 3
+    return result
 
-    return y_new
 
 # Ввод данных
 def input_points():
@@ -181,8 +171,9 @@ def program(x, y):
             plt.legend()
             plt.draw()
             plt.pause(0.3)
-        except ValueError:
+        except ValueError as e:
             print("Выход из программы.")
+            print(e)
             break
 
 
